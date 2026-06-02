@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>V2Ray Config Modifier</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#071321;
+--card:#121d35;
+--border:#203659;
+--green:#19f0b0;
+--text:#e7eeff;
+--muted:#8190af;
+}
+
+body{
+background:linear-gradient(180deg,#05111e,#081726);
+color:var(--text);
+font-family:tahoma;
+padding:12px;
+min-height:100vh;
+}
+
+.wrapper{
+max-width:950px;
+margin:auto;
+}
+
+.header{
+margin-bottom:16px;
+padding-bottom:8px;
+border-bottom:1px solid rgba(25,240,176,.18);
+}
+
+.header h1{
+font-size:30px;
+font-weight:800;
+margin:0;
+}
+
+.header span{
+color:var(--green);
+}
+
+.subtitle{
+font-size:12px;
+margin-top:4px;
+color:var(--muted);
+}
+
+.box{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:14px;
+padding:14px;
+margin-bottom:14px;
+}
+
+.label{
+font-size:12px;
+margin-bottom:6px;
+color:#bcc8e6;
+}
+
+textarea{
+background:#06142d !important;
+border:1px solid #21375f !important;
+border-radius:10px !important;
+color:white !important;
+font-size:12px;
+padding:8px !important;
+resize:vertical;
+}
+
+textarea:focus{
+box-shadow:none !important;
+border-color:var(--green)!important;
+}
+
+.btn-main{
+padding:8px 14px;
+font-size:12px;
+border-radius:8px;
+background:var(--green);
+border:none;
+font-weight:bold;
+}
+
+.btn-copy{
+padding:7px 12px;
+font-size:11px;
+border-radius:8px;
+border:1px solid var(--green);
+color:var(--green);
+background:transparent;
+}
+
+.progress{
+height:5px;
+margin-top:12px;
+border-radius:20px;
+overflow:hidden;
+background:#09192f;
+}
+
+.progress-bar{
+background:var(--green);
+width:0%;
+transition:.25s;
+}
+
+#configList{
+height:190px;
+}
+
+#progressStatus{
+font-size:12px;
+margin-top:8px;
+color:var(--muted);
+}
+
+.small-gap{
+gap:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="header">
+
+<h1>
+
+V2Ray
+<span>Config Modifier</span>
+
+</h1>
+
+<div class="subtitle">
+
+کانفیگ خود را با آی‌پی‌های کم‌تاخیر جایگزین کنید
+
+</div>
+
+</div>
+
+
+
+<div class="row g-2">
+
+<div class="col-lg-6">
+
+<div class="box">
+
+<div class="label">
+
+کانفیگ
+
+</div>
+
+<textarea
+id="inputConfig"
+class="form-control"
+rows="3"
+placeholder="vless://..."></textarea>
+
+</div>
+
+</div>
+
+
+
+<div class="col-lg-6">
+
+<div class="box">
+
+<div class="label">
+
+لیست آی‌پی
+
+</div>
+
+<textarea
+id="ipList"
+class="form-control"
+rows="3"
+placeholder="1.1.1.1"></textarea>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="box">
+
+<div class="d-flex justify-content-between align-items-center small-gap">
+
+<button
+onclick="autoOptimize()"
+class="btn-main">
+
+⚡ Optimize
+
+</button>
+
+<button
+onclick="copyConfigs()"
+class="btn-copy">
+
+کپی خروجی
+
+</button>
+
+</div>
+
+<div class="progress">
+
+<div
+id="progressBar"
+class="progress-bar"></div>
+
+</div>
+
+<div id="progressStatus">
+
+آماده اجرا
+
+</div>
+
+</div>
+
+
+
+<div class="box">
+
+<div class="label">
+
+Result Configs
+
+</div>
+
+<textarea
+id="configList"
+class="form-control"
+rows="8"></textarea>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+function copyConfigs(){
+
+navigator.clipboard.writeText(
+
+document.getElementById(
+"configList"
+).value
+
+);
+
+alert("کپی شد");
+
+}
+
+
+
+async function checkLatency(ip) {
+
+return new Promise((resolve) => {
+
+const start = performance.now();
+
+const img = new Image();
+
+const timeout = setTimeout(() => {
+
+img.src = "";
+
+resolve(9999);
+
+}, 2000);
+
+img.onload = () => {
+
+clearTimeout(timeout);
+
+resolve(
+Math.round(
+performance.now() - start
+));
+
+};
+
+img.onerror = () => {
+
+clearTimeout(timeout);
+
+resolve(
+Math.round(
+performance.now() - start
+));
+
+};
+
+img.src = `https://${ip}/favicon.ico?${Date.now()}`;
+
+});
+
+}
+
+
+
+async function autoOptimize() {
+
+const configInput =
+document.getElementById(
+'inputConfig'
+).value.trim();
+
+const ipInput =
+document.getElementById(
+'ipList'
+).value.trim();
+
+const status =
+document.getElementById(
+'progressStatus'
+);
+
+if (!configInput || !ipInput) {
+
+alert(
+"لطفاً کانفیگ و لیست آی‌پی‌ها را وارد کنید."
+);
+
+return;
+}
+
+const baseConfig =
+configInput.split('\n')[0];
+
+const ips =
+ipInput
+.split(/[\s\n]+/)
+.filter(l => l.trim());
+
+status.innerText =
+"🚀 در حال تست...";
+
+let results = [];
+
+for(let i=0;i<ips.length;i++){
+
+let ip=ips[i];
+
+let ping=
+await checkLatency(ip);
+
+document
+.getElementById(
+"progressBar"
+)
+.style.width=
+`${((i+1)/ips.length)*100}%`;
+
+if (ping < 9999)
+results.push({ ip, ping });
+
+}
+
+results.sort(
+(a,b)=>
+a.ping-b.ping
+);
+
+let newConfigs = [];
+
+results.forEach((res) => {
+
+let updated =
+baseConfig.replace(
+/@[^:]+:/,
+`@${res.ip}:`
+);
+
+newConfigs.push(
+`${updated} | ${res.ping}ms`
+);
+
+});
+
+document
+.getElementById(
+'configList'
+).value =
+newConfigs.join('\n');
+
+status.innerText =
+`✅ ${results.length} کانفیگ ساخته شد`;
+
+}
+
+</script>
+
+</body>
+</html>
