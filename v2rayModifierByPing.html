@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>V2Ray Config Modifier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1120;
+            --card: #1a2236;
+            --accent: #00e5a0;
+            --accent-hover: #00c98b;
+            --accent-glow: rgba(0, 229, 160, 0.2);
+            --text: #e2e8f0;
+            --text-sec: #94a3b8;
+            --muted: #64748b;
+            --border: #1e293b;
+            --input-bg: #0f172a;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 600px 400px at 15% 15%, rgba(0,229,160,0.06), transparent),
+                radial-gradient(ellipse 500px 350px at 85% 80%, rgba(59,130,246,0.04), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .main-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 2.5rem 1rem 3rem;
+        }
+
+        .page-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.3rem; }
+        .page-title .hi { color: var(--accent); }
+        .page-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.8rem; }
+
+        .top-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin-bottom: 2rem;
+            opacity: 0.4;
+            animation: pulse-line 3s ease-in-out infinite;
+        }
+        @keyframes pulse-line { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
+
+        .card-c {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.4rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+
+        .lbl { display: block; font-weight: 600; font-size: 0.84rem; color: var(--text-sec); margin-bottom: 0.45rem; }
+
+        .ta {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            resize: vertical;
+            direction: ltr;
+            text-align: left;
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .ta:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .ta::placeholder { color: var(--muted); opacity: 0.55; }
+
+        .btn-go {
+            background: var(--accent); color: #0b1120; border: none; border-radius: 8px;
+            font-weight: 700; font-family: inherit; padding: 0.55rem 1.4rem; font-size: 0.88rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-go:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 18px var(--accent-glow); }
+        .btn-go:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .btn-stop {
+            background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px; font-weight: 600; font-family: inherit; padding: 0.55rem 1.2rem; font-size: 0.88rem;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-stop:hover { background: rgba(239,68,68,0.22); }
+
+        .btn-out {
+            background: transparent; color: var(--text-sec); border: 1px solid var(--border);
+            border-radius: 8px; font-weight: 500; font-family: inherit; padding: 0.4rem 0.9rem; font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-out:hover { border-color: var(--accent); color: var(--accent); }
+
+        .actions { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; }
+
+        .sett-toggle { cursor: pointer; color: var(--muted); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem; transition: color 0.2s; user-select: none; }
+        .sett-toggle:hover { color: var(--accent); }
+
+        .sett-panel { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .sett-panel.open { display: block; }
+
+        .sett-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.7rem; }
+        .sett-row label { font-size: 0.82rem; color: var(--text-sec); }
+        .sett-row input[type="number"] {
+            width: 80px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+            border-radius: 6px; padding: 0.25rem 0.4rem; font-size: 0.85rem; text-align: center; direction: ltr; font-family: inherit;
+        }
+        .sett-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+        .prog-wrap { display: none; margin-top: 1rem; }
+        .prog-wrap.on { display: block; }
+
+        .prog-bar { width: 100%; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .prog-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+
+        .prog-stats { display: flex; justify-content: space-between; margin-top: 0.45rem; font-size: 0.78rem; color: var(--muted); }
+
+        .live-out {
+            max-height: 180px; overflow-y: auto; margin-top: 0.8rem; font-size: 0.76rem; direction: ltr;
+            text-align: left; font-family: 'Courier New', monospace; color: var(--text-sec);
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .live-out .ok { color: var(--success); }
+        .live-out .fail { color: var(--danger); }
+
+        .res-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.5rem; }
+        .res-count { font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+        .res-btns { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+
+        .btn-copy-all {
+            background: rgba(0, 229, 160, 0.1); color: var(--accent); border: 1px solid rgba(0, 229, 160, 0.3);
+            border-radius: 8px; font-weight: 600; font-family: inherit; padding: 0.4rem 1rem; font-size: 0.82rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-copy-all:hover { background: rgba(0, 229, 160, 0.2); box-shadow: 0 2px 12px var(--accent-glow); }
+
+        .v-err { font-size: 0.76rem; color: var(--danger); margin-top: 0.3rem; display: none; }
+        .v-err.show { display: block; }
+
+        .toast-box { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast-i {
+            background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.7rem 1.4rem;
+            border-radius: 8px; font-size: 0.84rem; box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+            animation: tIn 0.3s ease, tOut 0.3s ease 2.7s forwards; pointer-events: auto; font-family: 'Vazirmatn', sans-serif;
+        }
+        .toast-i.ok  { border-color: var(--success); }
+        .toast-i.err { border-color: var(--danger); }
+        .toast-i.wrn { border-color: var(--warning); }
+
+        @keyframes tIn  { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes tOut { from { opacity: 1; } to { opacity: 0; } }
+
+        @media (max-width: 700px) {
+            .input-grid { grid-template-columns: 1fr; }
+            .main-wrap { padding: 1.2rem 0.6rem 2rem; }
+            .page-title { font-size: 1.35rem; }
+            .res-head { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast-box" id="toastBox"></div>
+
+<div class="main-wrap">
+    <h1 class="page-title">V2Ray <span class="hi">Config Modifier</span></h1>
+    <p class="page-sub">کانفیگ خود را با آی‌پی‌های کم‌تأخیر جایگزین کنید</p>
+    <div class="top-line"></div>
+
+    <div class="input-grid">
+        <div class="card-c">
+            <label class="lbl"><i class="bi bi-link-45deg"></i> کانفیگ پایه</label>
+            <textarea id="cfgIn" class="ta" rows="3" placeholder="vless://uuid@host:port?params#name"></textarea>
+            <div class="v-err" id="cfgErr">لطفاً یک کانفیگ معتبر وارد کنید</div>
+        </div>
+        <div class="card-c">
+            <label class="lbl"><i class="bi bi-list-ul"></i> لیست آی‌پی</label>
+            <textarea id="ipIn" class="ta" rows="3" placeholder="1.1.1.1&#10;2.2.2.2&#10;3.3.3.3"></textarea>
+            <div class="v-err" id="ipErr">لطفاً حداقل یک آی‌پی وارد کنید</div>
+        </div>
+    </div>
+
+    <div class="card-c">
+        <div class="actions">
+            <button id="btnGo" class="btn-go" onclick="startOptimize()">
+                <i class="bi bi-lightning-charge"></i> بررسی و بهینه‌سازی
+            </button>
+            <button id="btnStop" class="btn-stop" onclick="stopOptimize()" style="display:none">
+                <i class="bi bi-x-lg"></i> لغو
+            </button>
+            <span class="sett-toggle" onclick="toggleSettings()">
+                <i class="bi bi-gear"></i> تنظیمات پیشرفته
+            </span>
+        </div>
+
+        <div class="sett-panel" id="settPanel">
+            <div class="sett-row">
+                <label>تایم‌اوت پینگ (ms)</label>
+                <input type="number" id="sTimeout" value="3000" min="500" max="15000" step="500">
+            </div>
+            <div class="sett-row">
+                <label>تعداد همزمان تست</label>
+                <input type="number" id="sConc" value="8" min="1" max="30" step="1">
+            </div>
+        </div>
+
+        <div class="prog-wrap" id="progWrap">
+            <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+            <div class="prog-stats">
+                <span id="progTxt">در حال بررسی تأخیر...</span>
+                <span id="progCnt">0/0</span>
+            </div>
+            <div class="live-out" id="liveOut"></div>
+        </div>
+    </div>
+
+    <div class="card-c">
+        <div class="res-head">
+            <label class="lbl" style="margin:0"><i class="bi bi-check-circle"></i> نتایج</label>
+            <div class="res-btns">
+                <span class="res-count" id="resCnt"></span>
+                <button class="btn-copy-all" onclick="copyAllConfigs()">
+                    <i class="bi bi-clipboard-check"></i> کپی همه کانفیگ‌ها
+                </button>
+                <button class="btn-out" onclick="copyWithPing()">
+                    <i class="bi bi-clipboard-data"></i> کپی متن + پینگ
+                </button>
+            </div>
+        </div>
+        <textarea id="resOut" class="ta" rows="10" readonly></textarea>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   زیرساخت تست پینگ (مبتنی بر Image اصلی)
+   ═══════════════════════════════════════════ */
+let isAborted = false;
+
+function checkLatency(ip, timeout) {
+    return new Promise((resolve) => {
+        if (isAborted) return resolve({ ip, ping: 9999 });
+        
+        const start = performance.now();
+        const img = new Image();
+        
+        const timer = setTimeout(() => {
+            img.onload = img.onerror = null;
+            img.src = "";
+            resolve({ ip, ping: 9999 });
+        }, timeout);
+
+        img.onload = img.onerror = () => {
+            clearTimeout(timer);
+            resolve({ ip, ping: Math.round(performance.now() - start) });
+        };
+        
+        img.src = `https://${ip}/favicon.ico?_${Date.now()}`;
+    });
+}
+
+/* اجرای موازی تست‌ها با محدودیت همزمانی */
+async function runPings(ips, concurrency, timeout, onProgress) {
+    const results = [];
+    const queue = [...ips];
+    let done = 0;
+    const total = ips.length;
+
+    const worker = async () => {
+        while (queue.length && !isAborted) {
+            const ip = queue.shift();
+            const res = await checkLatency(ip, timeout);
+            results.push(res);
+            done++;
+            onProgress?.(done, total, res);
+        }
+    };
+
+    const count = Math.min(concurrency, total);
+    await Promise.all(Array.from({ length: count }, () => worker()));
+
+    return isAborted ? null : results;
+}
+
+/* ═══════════════════════════════════════════
+   توابع کمکی
+   ═══════════════════════════════════════════ */
+
+const PROTOCOLS = ['vless://','vmess://','trojan://','ss://','hysteria2://','hy2://'];
+
+function replaceHost(config, newHost) {
+    const trimmed = config.trim();
+    if (trimmed.startsWith('vmess://')) {
+        try {
+            const obj = JSON.parse(atob(trimmed.slice(8)));
+            obj.add = newHost;
+            return 'vmess://' + btoa(JSON.stringify(obj));
+        } catch {}
+    }
+    return trimmed.replace(/@[^:]+:/, `@${newHost}:`);
+}
+
+function tagPing(config, ping) {
+    const suffix = ` [${ping}ms]`;
+    const hash = config.lastIndexOf('#');
+    if (hash !== -1) {
+        try {
+            const name = decodeURIComponent(config.slice(hash + 1));
+            return config.slice(0, hash + 1) + encodeURIComponent(name + suffix);
+        } catch {
+            return config + encodeURIComponent(suffix);
+        }
+    }
+    return config + '#' + encodeURIComponent(suffix.trim());
+}
+
+function isHostLike(s) { return /^[\w.\-]+$/.test(s); }
+
+function toast(msg, type = 'ok') {
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = `toast-i ${type}`;
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+}
+
+/* ═══════════════════════════════════════════
+   عملیات اصلی
+   ═══════════════════════════════════════════ */
+
+let lastResults = [];
+
+async function startOptimize() {
+    const cfgVal = document.getElementById('cfgIn').value.trim();
+    const ipVal  = document.getElementById('ipIn').value.trim();
+    const cfgErr = document.getElementById('cfgErr');
+    const ipErr  = document.getElementById('ipErr');
+
+    cfgErr.classList.remove('show');
+    ipErr.classList.remove('show');
+
+    let bad = false;
+    if (!cfgVal) { cfgErr.classList.add('show'); bad = true; }
+    if (!ipVal)  { ipErr.classList.add('show');  bad = true; }
+    if (bad) return;
+
+    const baseConfig = cfgVal.split('\n')[0].trim();
+    const ips = ipVal.split(/[\s\n]+/).filter(h => h && isHostLike(h));
+
+    if (!ips.length) {
+        ipErr.textContent = 'هیچ آی‌پی معتیری یافت نشد';
+        ipErr.classList.add('show');
+        return;
+    }
+
+    if (!PROTOCOLS.some(p => baseConfig.startsWith(p))) {
+        toast('فرمت کانفیگ شناخته نشده — ممکن است خروجی نادرست باشد', 'wrn');
+    }
+
+    const timeout = Math.max(500, parseInt(document.getElementById('sTimeout').value) || 3000);
+    const conc    = Math.max(1, Math.min(30, parseInt(document.getElementById('sConc').value) || 8));
+
+    setUIRunning(true);
+    isAborted = false;
+    lastResults = [];
+
+    const results = await runPings(ips, conc, timeout, (done, total, r) => {
+        const pct = Math.round((done / total) * 100);
+        document.getElementById('progFill').style.width = `${pct}%`;
+        document.getElementById('progCnt').textContent = `${done}/${total}`;
+
+        const live = document.getElementById('liveOut');
+        const line = document.createElement('div');
+        if (r.ping < 9999) {
+            line.className = 'ok';
+            line.textContent = `${r.ip} \u2192 ${r.ping}ms`;
+        } else {
+            line.className = 'fail';
+            line.textContent = `${r.ip} \u2192 timeout`;
+        }
+        live.appendChild(line);
+        live.scrollTop = live.scrollHeight;
+    });
+
+    setUIRunning(false);
+
+    if (!results) {
+        document.getElementById('progTxt').textContent = 'عملیات لغو شد';
+        toast('عملیات لغو شد', 'wrn');
+        return;
+    }
+
+    const valid = results.filter(r => r.ping < 9999).sort((a, b) => a.ping - b.ping);
+
+    if (!valid.length) {
+        document.getElementById('progTxt').textContent = 'هیچ آی‌پی‌ای پاسخ نداد';
+        toast('هیچ آی‌پی‌ای پاسخ نداد', 'err');
+        return;
+    }
+
+    lastResults = valid.map(r => {
+        let cfg = replaceHost(baseConfig, r.ip);
+        cfg = tagPing(cfg, r.ping);
+        return { config: cfg, ip: r.ip, ping: r.ping };
+    });
+
+    document.getElementById('resOut').value = lastResults.map(r => r.config).join('\n');
+    document.getElementById('resCnt').textContent = `${valid.length} کانفیگ`;
+    document.getElementById('progTxt').textContent =
+        `پایان! ${valid.length} کانفیگ از ${ips.length} آی‌پی ساخته شد`;
+
+    toast(`${valid.length} کانفیگ بهینه ساخته شد`, 'ok');
+}
+
+function stopOptimize() {
+    isAborted = true;
+}
+
+function setUIRunning(running) {
+    document.getElementById('btnGo').disabled = running;
+    document.getElementById('btnStop').style.display = running ? '' : 'none';
+    const pw = document.getElementById('progWrap');
+    if (running) {
+        pw.classList.add('on');
+        document.getElementById('progFill').style.width = '0%';
+        document.getElementById('progTxt').textContent = 'در حال بررسی تأخیر...';
+        document.getElementById('progCnt').textContent = '0/0';
+        document.getElementById('liveOut').innerHTML = '';
+        document.getElementById('resOut').value = '';
+        document.getElementById('resCnt').textContent = '';
+    }
+}
+
+function copyAllConfigs() {
+    const text = document.getElementById('resOut').value;
+    if (!text.trim()) { toast('موردی برای کپی وجود ندارد', 'wrn'); return; }
+    copyText(text);
+}
+
+function copyWithPing() {
+    if (!lastResults.length) { toast('موردی برای کپی وجود ندارد', 'wrn'); return; }
+    const text = lastResults.map(r => `${r.config} | ${r.ping}ms`).join('\n');
+    copyText(text);
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        toast('با موفقیت کپی شد', 'ok');
+    }).catch(() => {
+        const ta = document.getElementById('resOut');
+        ta.value = text;
+        ta.select();
+        document.execCommand('copy');
+        toast('با موفقیت کپی شد', 'ok');
+    });
+}
+
+function toggleSettings() {
+    document.getElementById('settPanel').classList.toggle('open');
+}
+
+document.getElementById('cfgIn').addEventListener('input', () => {
+    document.getElementById('cfgErr').classList.remove('show');
+});
+document.getElementById('ipIn').addEventListener('input', () => {
+    document.getElementById('ipErr').classList.remove('show');
+});
+
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') startOptimize();
+});
+</script>
+</body>
+</html>
